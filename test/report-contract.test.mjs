@@ -18,3 +18,11 @@ test('actual report time, tool and target mismatches fail rather than use a subs
   assert.throws(() => reportCalls(report(undefined, undefined, '/foreign/workspace'), env), /different environment/);
   assert.throws(() => reportCalls('<html>static snapshot only</html>', env), /No statically verified/);
 });
+
+test('a local binding cannot replace an unrelated global report target', () => {
+  const original = report(undefined, undefined, '/foreign/workspace');
+  const shadowed = original.replace('</script>', `function unrelated(){const RES_ID=${JSON.stringify(env.APPINSIGHTS_RESOURCE_ID)};} </script>`);
+  assert.throws(() => reportCalls(shadowed, env), /Ambiguous report binding/);
+  const dynamic = report().replace('</script>', 'function unrelated(){const RES_ID=lookupTarget();} </script>');
+  assert.throws(() => reportCalls(dynamic, env), /Ambiguous report binding/);
+});

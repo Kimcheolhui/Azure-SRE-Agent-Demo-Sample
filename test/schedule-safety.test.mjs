@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
+import { EventEmitter } from 'node:events';
 import { restoreSchedule, withPausedSchedule } from '../scripts/schedule-safety.mjs';
 
 async function fixture(context) {
@@ -28,6 +29,40 @@ test('crash restoration is bound to Agent and verifies paused status', async con
   await assert.rejects(restoreSchedule(api, marker, 'foreign'), /different Agent/);
   assert.equal(calls.length, 0);
   assert.equal(await restoreSchedule(api, marker, 'target'), true);
+});
+
+test('an interruption waits for resume acknowledgement before cleanup', async context => {
+  const marker = await fixture(context);
+  const processHandle = new EventEmitter();
+  const calls = [];
+  let finishResume;
+  let enteredResume;
+  const resumeStarted = new Promise(resolve => { enteredResume = resolve; });
+  const api = async (route, method, body, options) => {
+    calls.push(route);
+    if (route.endsWith('/resume')) {
+      assert.equal(options?.signal, undefined);
+      enteredResume();
+      await new Promise(resolve => { finishResume = resolve; });
+    }
+    return { name: 'payment-daily-health', status: 'Paused' };
+  };
+  const operation = withPausedSchedule(api, { id: 'task', name: 'payment-daily-health', status: 'Paused' }, marker, 'target', async () => { throw new Error('Should not execute after interruption'); }, processHandle);
+  const check = assert.rejects(operation, /SIGINT/);
+  await resumeStarted;
+  processHandle.emit('SIGINT');
+  assert.equal(calls.some(route => route.endsWith('/pause')), false);
+  finishResume();
+  await check;
+  assert(calls.some(route => route.endsWith('/pause')));
+});
+
+test('an indeterminate resume retains recovery evidence instead of claiming cleanup', async context => {
+  const marker = await fixture(context);
+  const api = async route => { if (route.endsWith('/resume')) throw new Error('Unknown resume outcome'); return { name: 'payment-daily-health', status: 'Paused' }; };
+  await assert.rejects(withPausedSchedule(api, { id: 'task', name: 'payment-daily-health', status: 'Paused' }, marker, 'target', async () => {}), /Unknown resume/);
+  assert.equal(JSON.parse(await readFile(marker, 'utf8')).resumeUncertain, true);
+  await assert.rejects(restoreSchedule(api, marker, 'target'), /indeterminate resume/);
 });
 for (const signal of ['SIGINT', 'SIGTERM']) test(`${signal} waits for Pause before terminating`, async context => {
   const marker = await fixture(context);

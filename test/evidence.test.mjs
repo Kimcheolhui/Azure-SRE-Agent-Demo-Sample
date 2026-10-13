@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { evidenceBinding, validateRecovery, matchingIncident } from '../scripts/evidence.mjs';
+import { evidenceBinding, validateRecovery, matchingIncident, newScheduledExecution } from '../scripts/evidence.mjs';
 
 function fixture() {
   const env = { AZURE_SUBSCRIPTION_ID: 'sub', AZURE_RESOURCE_GROUP: 'rg-demo-workload', AZURE_AKS_CLUSTER_NAME: 'aks-demo', SRE_AGENT_RESOURCE_ID: 'agent', AZURE_CONTAINER_REGISTRY_ENDPOINT: 'registry.azurecr.io', PAYMENT_ALERT_NAME: 'payment-alert' };
@@ -30,4 +30,12 @@ test('an old or unrelated incident cannot count as the current automatic investi
   assert.equal(matchingIncident({ ...thread, lastMessage: { ...thread.lastMessage, timeStamp: '2000-01-01T00:00:00Z' } }, env, run), false);
   assert.equal(matchingIncident(thread, env, { ...run, alertId: 'different-alert' }), false);
   assert.equal(matchingIncident({ ...thread, incidentDetails: { ...thread.incidentDetails, filterId: 'different-plan' } }, env, run), false);
+});
+
+test('accepted manual execution never reuses a previously completed thread', () => {
+  const start = '2026-01-02T00:00:00Z';
+  const history = [{ threadId: 'previous', executionTime: '2026-01-03T00:00:00Z', completed: true }, { threadId: 'stale', executionTime: '2026-01-01T00:00:00Z' }];
+  assert.equal(newScheduledExecution(history, new Set(['previous']), start), undefined);
+  const current = { threadId: 'current', executionTime: '2026-01-02T00:00:01Z' };
+  assert.equal(newScheduledExecution([...history, current], new Set(['previous']), start), current);
 });

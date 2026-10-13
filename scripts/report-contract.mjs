@@ -17,6 +17,7 @@ function value(node, declarations, parameters = {}, resolving = new Set()) {
   if (node.type === 'Identifier') {
     if (Object.hasOwn(parameters, node.name)) return parameters[node.name];
     if (!declarations.has(node.name) || resolving.has(node.name)) throw new Error(`Unresolved report expression: ${node.name}`);
+    if (declarations.get(node.name).type === 'AmbiguousBinding') throw new Error(`Ambiguous report binding across lexical scopes: ${node.name}`);
     return value(declarations.get(node.name), declarations, parameters, new Set([...resolving, node.name]));
   }
   if (node.type === 'BinaryExpression' && node.operator === '+') return value(node.left, declarations, parameters, resolving) + value(node.right, declarations, parameters, resolving);
@@ -43,9 +44,11 @@ export function reportCalls(html, env) {
   for (const script of scripts(parseHtml(html))) {
     const ast = parseJavaScript(script, { ecmaVersion: 'latest', sourceType: 'script' });
     const declarations = new Map();
+    const functions = new Map();
     const invocations = [];
     full(ast, node => {
-      if (node.type === 'VariableDeclarator' && node.id.type === 'Identifier' && node.init && ['Literal', 'Identifier', 'BinaryExpression', 'TemplateLiteral', 'ObjectExpression'].includes(node.init.type)) declarations.set(node.id.name, node.init);
+      if (node.type === 'VariableDeclarator' && node.id.type === 'Identifier') declarations.set(node.id.name, declarations.has(node.id.name) ? { type: 'AmbiguousBinding' } : node.init || { type: 'UninitializedBinding' });
+      if (node.type === 'FunctionDeclaration' && node.id) functions.set(node.id.name, (functions.get(node.id.name) || 0) + 1);
       if (node.type === 'CallExpression') invocations.push(node);
     });
     fullAncestor(ast, (node, state, ancestors) => {
@@ -55,6 +58,7 @@ export function reportCalls(html, env) {
       const toolName = value(node.arguments[0], declarations);
       if (toolName !== 'system-mcp-monitor_monitor_resource_log_query') throw new Error('Report contains an unapproved tool');
       const enclosing = [...ancestors].reverse().find(ancestor => ancestor.type === 'FunctionDeclaration');
+      if (enclosing && functions.get(enclosing.id.name) !== 1) throw new Error('Ambiguous report function across lexical scopes');
       const uses = enclosing ? invocations.filter(invocation => invocation.callee.type === 'Identifier' && invocation.callee.name === enclosing.id.name) : [null];
       for (const invocation of uses) {
         const parameters = enclosing ? Object.fromEntries(enclosing.params.map((parameter, index) => {

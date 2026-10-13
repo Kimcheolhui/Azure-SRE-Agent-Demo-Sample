@@ -30,3 +30,7 @@ export function matchingIncident(thread, env, run) {
   const ruleId = `/subscriptions/${env.AZURE_SUBSCRIPTION_ID}/resourceGroups/${env.AZURE_RESOURCE_GROUP}/providers/Microsoft.Insights/scheduledQueryRules/${env.PAYMENT_ALERT_NAME}`;
   return thread?.source === 'Incident' && thread.threadOrigin === 'Trigger' && thread.incidentSource?.incidentId?.toLowerCase() === ruleId.toLowerCase() && thread.incidentDetails?.filterId === 'payment-alert-response' && thread.status?.incidentStatus?.incidentId === run.alertId && Date.parse(thread.incidentDetails.incidentCreatedTime) >= Date.parse(run.startedUtc) && Date.parse(thread.lastMessage?.timeStamp) >= Date.parse(run.startedUtc) && completedReply(thread);
 }
+
+export function newScheduledExecution(history, previousIds, startedUtc) {
+  return history.filter(item => item.threadId && !previousIds.has(item.threadId) && Date.parse(item.executionTime) >= Date.parse(startedUtc)).sort((left, right) => Date.parse(right.executionTime) - Date.parse(left.executionTime))[0];
+}

@@ -6,6 +6,7 @@ import { reviewedReportApproval } from './approval.mjs';
 import { restoreSchedule, withPausedSchedule } from './schedule-safety.mjs';
 import { setTimeout as delay } from 'node:timers/promises';
 import { reportCalls } from './report-contract.mjs';
+import { newScheduledExecution } from './evidence.mjs';
 
 const action = process.argv[2];
 if (!['report-create', 'report-approve', 'report-status', 'report-verify', 'schedule-status', 'schedule-run'].includes(action)) throw new Error('Usage: node scripts/features.mjs report-create|report-approve|report-status|report-verify|schedule-status|schedule-run');
@@ -42,9 +43,16 @@ if (action === 'report-create') {
     if (task.status !== 'Paused') throw new Error('Prepared task must be paused before bounded manual execution');
     if (task.nextExecutionTime && Date.parse(task.nextExecutionTime) < Date.now() + 600000) throw new Error('A cron execution is too close for bounded activation; use the native portal after reviewing the schedule');
     await withPausedSchedule(api, task, scheduleMarker, env.SRE_AGENT_RESOURCE_ID, async signal => {
+      const previousIds = new Set(items(await api(`/api/v1/scheduledtasks/${task.id}/executions`, 'GET', undefined, { signal })).map(item => item.threadId));
+      const startedUtc = new Date().toISOString();
       await api(`/api/v1/scheduledtasks/${task.id}/execute`, 'POST', undefined, { signal });
-      const history = items(await api(`/api/v1/scheduledtasks/${task.id}/executions`, 'GET', undefined, { signal }));
-      const execution = history[0];
+      const listedBy = Date.now() + 60000;
+      let execution;
+      do {
+        execution = newScheduledExecution(items(await api(`/api/v1/scheduledtasks/${task.id}/executions`, 'GET', undefined, { signal })), previousIds, startedUtc);
+        if (execution) break;
+        await delay(2000, undefined, { signal });
+      } while (Date.now() < listedBy);
       if (!execution?.threadId) throw new Error('Manual execution created no thread');
       const deadline = Date.now() + 600000;
       let finished = false;

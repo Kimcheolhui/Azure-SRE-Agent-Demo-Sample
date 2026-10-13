@@ -9,6 +9,7 @@ export async function restoreSchedule(api, markerPath, target) {
   if (task.name !== marker.name) throw new Error('Pending restoration task name changed');
   await api(`/api/v1/scheduledtasks/${marker.taskId}/pause`, 'POST', {});
   if ((await api(`/api/v1/scheduledtasks/${marker.taskId}`)).status !== 'Paused') throw new Error('Schedule restoration did not reach Paused');
+  if (marker.resumeUncertain) throw new Error('An indeterminate resume request is recorded. Task was paused again; inspect the native operation before clearing the restoration record.');
   await rm(markerPath);
   return true;
 }
@@ -21,16 +22,20 @@ export async function withPausedSchedule(api, task, markerPath, target, operatio
     controller.abort(new Error(`Schedule execution interrupted by ${name}`));
   }]));
   for (const [name, handler] of handlers) processHandle.on(name, handler);
+  const marker = { taskId: task.id, name: task.name, target, utc: new Date().toISOString(), resumeUncertain: true };
+  let resumeSettled = false;
   try {
-    await writeFile(markerPath, JSON.stringify({ taskId: task.id, name: task.name, target, utc: new Date().toISOString() }), { mode: 0o600 });
-    await api(`/api/v1/scheduledtasks/${task.id}/resume`, 'POST', {}, { signal: controller.signal });
+    await writeFile(markerPath, JSON.stringify(marker), { mode: 0o600 });
+    await api(`/api/v1/scheduledtasks/${task.id}/resume`, 'POST', {});
+    resumeSettled = true;
+    await writeFile(markerPath, JSON.stringify({ ...marker, resumeUncertain: false }), { mode: 0o600 });
     controller.signal.throwIfAborted();
     return await operation(controller.signal);
   } finally {
     try {
       await api(`/api/v1/scheduledtasks/${task.id}/pause`, 'POST', {});
       if ((await api(`/api/v1/scheduledtasks/${task.id}`)).status !== 'Paused') throw new Error('Interrupted task did not return to Paused; restoration record retained');
-      await rm(markerPath, { force: true });
+      if (resumeSettled) await rm(markerPath, { force: true });
     } finally {
       for (const [name, handler] of handlers) processHandle.removeListener(name, handler);
     }
