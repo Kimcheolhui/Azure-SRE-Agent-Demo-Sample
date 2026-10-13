@@ -1,0 +1,11 @@
+node_modules/
+.azure/
+artifacts/
+.env
+.env.*
+*.pem
+*.key
+*.pfx
+*.p12
+*.kubeconfig
+.DS_Store

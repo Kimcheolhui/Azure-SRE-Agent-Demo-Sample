@@ -1,0 +1,23 @@
+import assert from 'node:assert/strict';
+import { readFile, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { root, environment, kubeconfig, kubectl, run, validateRelease } from './cloud.mjs';
+import { createRuntimeClient } from './runtime.mjs';
+
+const values = environment();
+const filename = await kubeconfig(values);
+const release = JSON.parse(await readFile(path.join(root, 'artifacts/release.json'), 'utf8'));
+validateRelease(values, release);
+const pods = JSON.parse(kubectl(filename, ['-n', 'payments', 'get', 'pods', '-l', 'app=payment-api,track=canary', '-o', 'json']));
+const pod = pods.items.find(item => !item.metadata.deletionTimestamp && item.status.containerStatuses?.every(container => container.ready));
+if (!pod) throw new Error('A running affected canary is required to verify the deployed source');
+const source = kubectl(filename, ['-n', 'payments', 'exec', pod.metadata.name, '--', 'node', '-e', 'process.stdout.write(require("node:fs").readFileSync("/app/src/provider-client.mjs","utf8"))']);
+assert.equal(source, await readFile(path.join(root, 'app/releases/v1.9/provider-client.mjs'), 'utf8'));
+const document = `# Deployed Provider Client Source\n\nThis source was read from the actual dedicated demo container by its operator.\nIt is a source snapshot, not verified GitHub Code Access.\n\nRelease: v1.9\nImage: ${release.images['v1.9']}\nSource revision: ${release.sourceCommit}\nRepository source path: app/releases/v1.9/provider-client.mjs\nContainer path: /app/src/provider-client.mjs\n\n\`\`\`javascript\n${source}\n\`\`\`\n`;
+await writeFile(path.join(root, 'artifacts/deployed-provider-client-v19.md'), document);
+const token = run('az', ['account', 'get-access-token', '--scope', '59f0a04a-b322-4310-adc9-39ac41e9631e/.default', '--query', 'accessToken', '-o', 'tsv'], { stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+const api = createRuntimeClient(values.SRE_AGENT_ENDPOINT, token);
+const form = new FormData();
+form.append('files', new Blob([document], { type: 'text/markdown' }), 'deployed-provider-client-v19.md');
+await api('/api/v1/AgentMemory/upload', 'POST', form);
+console.log(JSON.stringify({ sourceMatchedDeployedContainer: true, githubCodeAccessVerified: false, uploadedDocument: 'deployed-provider-client-v19.md' }));

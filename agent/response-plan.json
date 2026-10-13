@@ -1,0 +1,13 @@
+{
+  "name": "payment-alert-response",
+  "type": "IncidentFilter",
+  "tags": [],
+  "properties": {
+    "incidentPlatform": "AzMonitor",
+    "isEnabled": true,
+    "priorities": ["Sev2"],
+    "titleContains": "${PAYMENT_ALERT_NAME}",
+    "handlingAgent": "payment-specialist",
+    "agentMode": "Review"
+  }
+}

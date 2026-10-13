@@ -1,0 +1,77 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    { "apiVersion": "v1", "kind": "Namespace", "metadata": { "name": "payments", "labels": { "purpose": "sre-customer-demo" } } },
+    { "apiVersion": "v1", "kind": "Service", "metadata": { "name": "payment-api", "namespace": "payments" }, "spec": { "selector": { "app": "payment-api" }, "ports": [{ "port": 8080, "targetPort": 8080 }] } },
+    { "apiVersion": "v1", "kind": "Service", "metadata": { "name": "payment-provider", "namespace": "payments" }, "spec": { "selector": { "app": "payment-provider" }, "ports": [{ "port": 8081, "targetPort": 8081 }] } },
+    {
+      "apiVersion": "apps/v1", "kind": "Deployment",
+      "metadata": { "name": "payment-api", "namespace": "payments", "labels": { "application": "payments" } },
+      "spec": {
+        "replicas": 2,
+        "selector": { "matchLabels": { "app": "payment-api", "track": "stable" } },
+        "template": {
+          "metadata": { "labels": { "app": "payment-api", "track": "stable", "application": "payments" } },
+          "spec": {
+            "securityContext": { "runAsNonRoot": true, "runAsUser": 1000, "fsGroup": 1000 },
+            "containers": [{
+              "name": "payment-api", "image": "__HEALTHY_IMAGE__",
+              "ports": [{ "containerPort": 8080 }],
+              "env": [{ "name": "PAYMENT_PROVIDER_URL", "value": "http://payment-provider.payments.svc.cluster.local:8081" }, { "name": "APPLICATIONINSIGHTS_CONNECTION_STRING", "valueFrom": { "secretKeyRef": { "name": "payment-telemetry", "key": "connection-string" } } }],
+              "resources": { "requests": { "cpu": "100m", "memory": "256Mi" }, "limits": { "cpu": "1", "memory": "768Mi" } },
+              "readinessProbe": { "httpGet": { "path": "/version", "port": 8080 }, "initialDelaySeconds": 5 },
+              "livenessProbe": { "httpGet": { "path": "/health", "port": 8080 }, "initialDelaySeconds": 20 },
+              "securityContext": { "allowPrivilegeEscalation": false, "capabilities": { "drop": ["ALL"] } }
+            }]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1", "kind": "Deployment",
+      "metadata": { "name": "payment-api-canary", "namespace": "payments", "labels": { "application": "payments" } },
+      "spec": {
+        "replicas": 0,
+        "selector": { "matchLabels": { "app": "payment-api", "track": "canary" } },
+        "template": {
+          "metadata": { "labels": { "app": "payment-api", "track": "canary", "application": "payments" } },
+          "spec": {
+            "securityContext": { "runAsNonRoot": true, "runAsUser": 1000, "fsGroup": 1000 },
+            "containers": [{
+              "name": "payment-api", "image": "__AFFECTED_IMAGE__",
+              "ports": [{ "containerPort": 8080 }],
+              "env": [{ "name": "PAYMENT_PROVIDER_URL", "value": "http://payment-provider.payments.svc.cluster.local:8081" }, { "name": "APPLICATIONINSIGHTS_CONNECTION_STRING", "valueFrom": { "secretKeyRef": { "name": "payment-telemetry", "key": "connection-string" } } }],
+              "resources": { "requests": { "cpu": "100m", "memory": "256Mi" }, "limits": { "cpu": "1", "memory": "768Mi" } },
+              "readinessProbe": { "httpGet": { "path": "/version", "port": 8080 }, "initialDelaySeconds": 5 },
+              "livenessProbe": { "httpGet": { "path": "/health", "port": 8080 }, "initialDelaySeconds": 20 },
+              "securityContext": { "allowPrivilegeEscalation": false, "capabilities": { "drop": ["ALL"] } }
+            }]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1", "kind": "Deployment",
+      "metadata": { "name": "payment-provider", "namespace": "payments", "labels": { "application": "payments" } },
+      "spec": {
+        "replicas": 2,
+        "selector": { "matchLabels": { "app": "payment-provider" } },
+        "template": {
+          "metadata": { "labels": { "app": "payment-provider", "application": "payments" } },
+          "spec": {
+            "securityContext": { "runAsNonRoot": true, "runAsUser": 1000, "fsGroup": 1000 },
+            "containers": [{
+              "name": "payment-provider", "image": "__HEALTHY_IMAGE__", "command": ["node", "src/provider-server.mjs"],
+              "ports": [{ "containerPort": 8081 }],
+              "resources": { "requests": { "cpu": "500m", "memory": "128Mi" }, "limits": { "cpu": "2", "memory": "256Mi" } },
+              "readinessProbe": { "httpGet": { "path": "/health", "port": 8081 }, "initialDelaySeconds": 3 },
+              "livenessProbe": { "httpGet": { "path": "/health", "port": 8081 }, "initialDelaySeconds": 10 },
+              "securityContext": { "allowPrivilegeEscalation": false, "capabilities": { "drop": ["ALL"] } }
+            }]
+          }
+        }
+      }
+    }
+  ]
+}

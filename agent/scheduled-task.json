@@ -1,0 +1,13 @@
+{
+  "name": "payment-daily-health",
+  "type": "ScheduledTask",
+  "properties": {
+    "name": "payment-daily-health",
+    "description": "Daily read-only payment service health check at 09:00 KST.",
+    "cronExpression": "0 0 * * *",
+    "agent": "payment-specialist",
+    "agentMode": "Review",
+    "status": "Paused",
+    "agentPrompt": "${AZURE_RESOURCE_GROUP}의 ${AZURE_AKS_CLUSTER_NAME}, payments namespace를 대상으로 최근 30분의 결제 요청·결제 수단별 실패율·p95·인스턴스별 오류·Deployment 상태를 읽기 전용으로 점검해 주세요. 팀의 정상 기준과 비교하고 미조회 항목은 명시하세요. 리소스를 변경하지 마세요."
+  }
+}

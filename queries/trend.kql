@@ -1,0 +1,5 @@
+AppRequests
+| where TimeGenerated > ago(30m) and AppRoleName == "payment-api" and Name == "GET /pay"
+| summarize Requests=count(), Errors504=countif(ResultCode == "504"), P95Ms=percentile(DurationMs, 95) by bin(TimeGenerated, 1m)
+| extend FailureRate=100.0 * Errors504 / Requests
+| order by TimeGenerated asc

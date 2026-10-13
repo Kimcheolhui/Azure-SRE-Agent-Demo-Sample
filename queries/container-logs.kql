@@ -1,0 +1,6 @@
+ContainerLogV2
+| where TimeGenerated > ago(30m) and PodNamespace == "payments"
+| extend record=parse_json(tostring(LogMessage))
+| where tostring(record.event) in ("authorization_started", "payment_failed", "request_completed")
+| project TimeGenerated, PodName, ContainerName, event=tostring(record.event), requestId=tostring(record.requestId), traceId=tostring(record.traceId), release=tostring(record.release), signalAborted=tobool(record.signalAborted), errorType=tostring(record.errorType), elapsedMs=todouble(record.elapsedMs), status=toint(record.status)
+| order by TimeGenerated asc

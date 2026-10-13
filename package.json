@@ -1,0 +1,29 @@
+{
+  "name": "sre-agent-demo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "start": "node app/src/server.mjs",
+    "start:provider": "node app/src/provider-server.mjs",
+    "smoke:local": "node scripts/local-smoke.mjs",
+    "verify": "node scripts/verify.mjs",
+    "verify:cloud": "node scripts/verify.mjs --cloud",
+    "publish:prepare": "node scripts/publish.mjs --prepare",
+    "publish:repo": "node scripts/publish.mjs --push"
+  },
+  "dependencies": {
+    "@opentelemetry/resources": "2.11.0",
+    "applicationinsights": "3.17.0"
+  },
+  "devDependencies": {
+    "@balena/dockerignore": "^1.0.2",
+    "acorn": "^8.19.0",
+    "acorn-walk": "^8.3.5",
+    "parse5": "^8.0.1"
+  }
+}

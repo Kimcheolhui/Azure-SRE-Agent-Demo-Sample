@@ -1,0 +1,7 @@
+AppRequests
+| where TimeGenerated > ago(30m) and AppRoleName == "payment-api"
+| extend paymentMethod=tostring(Properties.paymentMethod), release=tostring(Properties.release), instance=tostring(Properties.instance), sourceCommit=tostring(Properties.sourceCommit)
+| where Name == "GET /pay"
+| summarize Requests=count(), Failures=countif(Success == false), P95Ms=percentile(DurationMs, 95) by paymentMethod, release, instance, sourceCommit
+| extend FailureRate=round(100.0 * Failures / Requests, 2)
+| order by Failures desc

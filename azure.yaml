@@ -1,0 +1,14 @@
+name: sre-agent-demo
+metadata:
+  template: sre-agent-demo@1.0.0
+infra:
+  provider: bicep
+  path: infra
+  module: main
+hooks:
+  postprovision:
+    posix:
+      shell: sh
+      run: bash ./scripts/postprovision.sh
+      interactive: false
+      continueOnError: false

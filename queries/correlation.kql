@@ -1,0 +1,9 @@
+AppRequests
+| where TimeGenerated > ago(30m) and AppRoleName == "payment-api" and Name == "GET /pay"
+| project RequestTime=TimeGenerated, OperationId, ResultCode, RequestDurationMs=DurationMs, RequestProperties=Properties
+| join kind=leftouter (
+    AppDependencies
+    | where TimeGenerated > ago(30m) and AppRoleName == "payment-api"
+    | project OperationId, DependencyName=Name, DependencyDurationMs=DurationMs, DependencySuccess=Success
+) on OperationId
+| order by RequestTime asc

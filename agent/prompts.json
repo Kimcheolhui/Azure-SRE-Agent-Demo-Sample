@@ -1,0 +1,9 @@
+{
+  "onboarding-discovery": "우리 Payments 팀의 서비스 온보딩을 진행해 주세요. rg-sredemokch14-workload의 aks-sredemokch14와 payments namespace를 읽기 전용으로 탐색하고 서비스 구조·호출 관계·배포 구성을 확인해 주세요. GitHub 저장소는 https://github.com/Kimcheolhui/Azure-SRE-Agent-Demo-Sample 입니다. 원본에 접근하지 못하면 그 사실을 명시하고 추정으로 채우지 마세요. 리소스를 변경하지 마세요.",
+  "onboarding-context": "Payments demo 팀은 payments namespace의 payment-api와 payment-provider를 담당합니다. API는 카드와 계좌 요청을 provider 승인 API로 전달합니다. provider는 서명 계산을 수행하며 실제 은행·고객·주문 DB는 없습니다. 정상 기준은 각 결제 수단 새 요청 20건에서 실패 0건, p95 1,000ms 이하입니다. provider 기본 제한 3초를 넘긴 요청은 해당 요청만 취소되어야 하며 다른 동시 요청과 이후 요청은 정상 완료되어야 합니다. 이 정보를 출처를 구분한 팀 지식으로 정리하고 저장한 파일을 알려 주세요. 리소스를 변경하지 마세요.",
+  "onboarding-check": "Payments 서비스의 호출 구조와 정상 기준을 팀 지식에서 찾아 설명해 주세요. 저장된 파일·기억·문서의 출처를 알려 주고 실제로 읽지 못한 정보는 추정하지 마세요.",
+  "baseline-check": "rg-sredemokch14-workload의 aks-sredemokch14, payments namespace에서 최근 15분의 결제 요청·오류·p95·Deployment 상태를 읽기 전용으로 점검해 주세요. 실제 조회한 원본과 실패한 조회를 구분하고 리소스를 변경하지 마세요.",
+  "investigation": "rg-sredemokch14-workload의 aks-sredemokch14, payments namespace에서 새 버전 적용 이후 일부 결제 요청이 504로 실패한다는 보고가 있습니다. 최근 30분의 원인과 영향 범위를 조사해 주세요. 관련 운영 지식과 Skill을 사용하고 실제 요청·로그·배포 코드 근거를 연결하세요. 리소스를 변경하거나 결제를 재시도하지 마세요.",
+  "live-report": "Payments Service Live Report를 만들어 주세요. 업무용 Log Analytics/Application Insights에서 최근 30분의 payment-api 데이터로 결제 수단별 요청 수·실패율·p95, release·인스턴스별 오류, 분당 504 추이를 보여 주세요. 조회 리소스·UTC 구간·갱신 시각을 표시하고 정상 기준인 실패 0건·p95 1,000ms 이하와 비교하세요. 빈 데이터는 정상이나 0으로 표시하지 마세요. 변경 액션은 넣지 마세요.",
+  "report-refine-time": "기존 Payments Service Live Report의 조회 범위를 실제 최근 30분으로 맞춰 주세요. 도구의 hours 기본값과 별개로 모든 KQL에 timestamp > ago(30m) 조건을 포함해, 화면의 최근 30분 표기와 데이터가 일치하게 해 주세요. 기존 보고서 ID를 유지해 새 버전으로 저장하고, 결제 수단·실패율·p95·release·인스턴스·분당 504 추이를 유지하세요. 리소스 변경 도구는 넣지 마세요. 보고서 저장 승인 요청이 필요하면 멈추고 알려 주세요."
+}

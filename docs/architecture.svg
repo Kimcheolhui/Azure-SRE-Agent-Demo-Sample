@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 610" role="img" aria-labelledby="title description">
+  <title id="title">SRE Agent Demo Architecture</title>
+  <desc id="description">Stable and canary payment APIs call a CPU-backed provider on AKS. App Insights and Log Analytics feed Azure Monitor. SRE Agent connects telemetry, source and team knowledge to incident response and continuous operations.</desc>
+  <style>text{font-family:Pretendard,"Noto Sans KR",sans-serif;fill:#153746;font-size:24px}.title{font-size:28px;font-weight:700}.note{font-size:20px;fill:#526b74}.box{fill:#f4f8fa;stroke:#b6c9d1;stroke-width:2}.agent{fill:#edf7f2;stroke:#238369;stroke-width:3}.arrow{fill:none;stroke:#2477a7;stroke-width:3;marker-end:url(#head)}.optional{stroke-dasharray:8 7}</style>
+  <defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#2477a7"/></marker></defs>
+  <rect x="28" y="30" width="1344" height="552" rx="8" fill="#fff" stroke="#d8e4e8"/>
+  <text x="65" y="78" class="title">Payments on AKS</text>
+  <rect x="65" y="110" width="285" height="125" rx="8" class="box"/><text x="88" y="155" class="title">payment-api</text><text x="88" y="193">stable v1.8 / canary v1.9</text>
+  <rect x="65" y="300" width="285" height="115" rx="8" class="box"/><text x="88" y="345" class="title">payment-provider</text><text x="88" y="385">PBKDF2 / SHA-256</text>
+  <path d="M205 235V295" class="arrow"/><text x="220" y="273" class="note">POST /authorize</text>
+  <rect x="430" y="110" width="275" height="125" rx="8" class="box"/><text x="455" y="156" class="title">App Insights + LAW</text><text x="455" y="194">requests / logs / audit</text>
+  <path d="M350 170H420" class="arrow"/>
+  <rect x="430" y="300" width="275" height="115" rx="8" class="box"/><text x="455" y="346" class="title">Azure Monitor</text><text x="455" y="385">payment-api 504 alert</text>
+  <path d="M565 235V294" class="arrow"/>
+  <rect x="810" y="190" width="310" height="170" rx="8" class="agent"/><text x="840" y="240" class="title">Azure SRE Agent</text><text x="840" y="283">payment-specialist</text><text x="840" y="324">Response Plan / Review</text>
+  <path d="M705 173H765V232H802" class="arrow"/><path d="M705 354H764V320H802" class="arrow"/>
+  <rect x="810" y="45" width="310" height="92" rx="8" class="box"/><text x="832" y="82" class="title">GitHub Code Access</text><text x="832" y="116" class="note">Repository + deployed version</text><path d="M965 138V183" class="arrow optional"/>
+  <rect x="810" y="430" width="310" height="105" rx="8" class="box"/><text x="832" y="470" class="title">Team knowledge + Skill</text><text x="832" y="507">Context / normal criteria / steps</text><path d="M965 429V369" class="arrow"/>
+  <rect x="1170" y="154" width="165" height="252" rx="8" class="box"/><text x="1190" y="203" class="title">Operations</text><text x="1190" y="246">Hub</text><text x="1190" y="293">Automation</text><text x="1190" y="343">Live Reports</text><path d="M1120 278H1163" class="arrow"/>
+  <text x="65" y="488" class="note">Two isolated RGs: workload / agent</text><text x="65" y="524" class="note">No bank, customer data, order DB or public API ingress</text>
+</svg>
