@@ -25,12 +25,8 @@ for (const filename of changed) {
 if (changed.length) run('git', ['commit', '-m', 'Prepare Azure SRE Agent demo and harden customer rehearsal'], { stdio: 'inherit' });
 const revision = run('git', ['rev-parse', 'HEAD'], quiet).trim();
 if (mode === '--push') {
-  run('gh', ['auth', 'status'], quiet);
-  const account = run('gh', ['api', 'user', '--jq', '.login'], quiet).trim();
-  if (account.toLowerCase() !== 'kimcheolhui') throw new Error('GitHub CLI is signed in as a different account');
-  run('gh', ['auth', 'setup-git'], quiet);
   run('git', ['push', '--set-upstream', 'origin', 'main'], { stdio: 'inherit', env: { ...process.env, GIT_TERMINAL_PROMPT: '0' } });
   const published = run('git', ['ls-remote', 'origin', 'refs/heads/main'], quiet).split(/\s+/)[0];
   if (published !== revision) throw new Error('Remote main does not match the prepared commit');
 }
-console.log(JSON.stringify({ localCommit: revision, remote, published: mode === '--push', authenticationRequiredForPush: mode !== '--push' }));
+console.log(JSON.stringify({ localCommit: revision, remote, published: mode === '--push', pushPending: mode !== '--push' }));

@@ -110,9 +110,11 @@ GitHub 저장소는 https://github.com/Kimcheolhui/Azure-SRE-Agent-Demo-Sample �
 
 ```bash
 npm run publish:prepare
-gh auth login --hostname github.com --git-protocol https --web
 npm run publish:repo
 ```
+
+게시 명령은 일반 `git push`와 Git의 기존 credential helper를 사용합니다. GitHub CLI
+로그인은 필수가 아닙니다. 기존 Git 인증이 없을 때만 GitHub 로그인·인증을 준비합니다.
 
 소스를 저장소에 게시한 뒤 이미지를 다시 빌드합니다. 인증이 없으면 로컬 커밋까지
 준비할 수 있지만 원격 push는 수행하지 않습니다. 비밀번호·토큰은 채팅에 넣지 않습니다.
