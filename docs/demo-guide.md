@@ -216,7 +216,10 @@ Agent 자체 로그용 LAW/App Insights와 구분합니다. Connected 표시뿐 
 | Name | `payment-specialist` |
 | Handoff description | `Investigate payment service request failures, latency and deployment-related incidents using observed evidence.` |
 | Tools | 기본 상속 유지. 빈 목록으로 override하지 않으며 실제 읽기 도구를 확인 |
+| Choose Skills       | `payment-investigation` 선택                                                                                       |
 | Instructions | 아래 지침 |
+
+앞 단계에서 `payment-investigation` Skill을 저장한 뒤, Custom Agent의 **Choose Skills**에서 해당 Skill을 선택하고 Agent를 저장합니다. 이미 `payment-specialist`를 만들었다면 편집 화면에서 선택 상태를 확인합니다. Skill을 등록하거나 Instructions에 관련 Skill을 언급하는 것만으로 이 접근 설정을 대신하지 않습니다. 선택된 Skill은 관련 조사에서 동적으로 로딩됩니다. [공식 Skills 문서](https://learn.microsoft.com/en-us/azure/sre-agent/skills#skills-custom-agents-and-knowledge-files)
 
 ```text
 결제 서비스의 장애 조사를 담당합니다. 연결된 운영 문서와 관련 Skill을 확인하고 사건의 대상·UTC 시간·고객 증상을 고정하세요. 요청한 시간 범위를 유지하며 도구의 기본 lookback이 더 길면 쿼리에 시간 조건을 추가하세요. 요청과 종속성·예외·컨테이너 로그를 같은 요청과 인스턴스로 연결하고 실제 배포 이미지와 소스 버전을 대조하세요. 여러 원인 후보의 지지·반대 근거와 조회하지 못한 원본을 구분하세요. 원인·영향 범위·실행한 쿼리·코드 위치·권고 조치·검증 조건을 한국어로 설명하세요. 운영 문서와 실제 관측이 다르면 실제 결과를 우선하고 차이를 명시하세요. 리소스·코드·설정을 변경하거나 거래를 재시도하지 마세요. 비밀·토큰·Secret 내용은 조회하거나 출력하지 마세요.
@@ -336,7 +339,8 @@ Payments Service Live Report를 만들어 주세요. 연결된 업무용 Log Ana
 
 - azd의 인프라·앱·Agent 리소스·권한 준비 완료와 직접 수행할 Agent 연결·기능 구성 확인.
 - 실제 배포 버전·로그·GitHub 코드 접근.
-- 온보딩 지식 저장·새 대화 조회·문서 색인·Skill 사용.
+- 온보딩 지식 저장·새 대화 조회·문서 색인.
+- `payment-specialist`의 Choose Skills에서 `payment-investigation` 선택·저장 확인과 리허설 조사에서 실제 Skill 사용 확인.
 - 실제 경고·계획·담당·현재 실행의 자동 조사.
 - 같은 사건의 Operations Hub와 예약 실행·보고서 재조회.
 - 실습 전후 정상 복구와 반복 작업 중지.
