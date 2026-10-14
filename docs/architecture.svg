@@ -107,7 +107,7 @@
           </g>
           <path d="M743 1074H802" class="flow request"/>
         </g>
-        <path d="M317 978H450V1074H486" class="flow dependency"/>
+        <path id="node-workload-link" d="M317 978L486 1074" class="flow dependency"/>
       </g>
     </g>
     <g id="load-balancer" data-node="network">
@@ -127,10 +127,10 @@
       <text x="2025" y="481" class="product center">Azure SRE Agent</text>
     </g>
     <g id="agent-identities" data-node="managed-identities">
-      <use href="#icon-identity" x="1993" y="583" width="64" height="64"/>
-      <text x="2025" y="696" class="product center">Managed identities</text>
+      <use href="#icon-identity" x="2113" y="583" width="64" height="64"/>
+      <text x="2145" y="696" class="product center">Managed identities</text>
     </g>
-    <path d="M2025 535V571" class="flow dependency"/>
+    <path id="agent-identity-link" d="M2025 515L2145 571" class="flow dependency"/>
     <path d="M1785 766H2265" class="separator"/>
     <g id="agent-observability" data-node="agent-telemetry">
       <text x="2025" y="819" class="scope-title center">Agent monitoring</text>
@@ -142,19 +142,19 @@
       <text x="2169" y="1074" class="small center">Workspace</text>
       <path d="M1931 947H2119" class="flow telemetry"/>
     </g>
-    <path d="M2025 535H2240V876H1881V897" class="flow telemetry"/>
+    <path id="agent-telemetry-link" d="M1915 500L1881 897" class="flow telemetry"/>
   </g>
   <g id="infrastructure-flows">
-    <path d="M259 523V610H78V978H203" class="flow dependency"/>
-    <path d="M596 523V623H110V903H260V920" class="flow dependency"/>
-    <text x="619" y="609" class="label">이미지</text>
-    <path d="M1085 990H1347V610H933V515" class="flow telemetry"/>
-    <path d="M1285 1129H1370V633H1270V530" class="flow telemetry"/>
-    <text x="1130" y="606" class="label">관측 데이터</text>
-    <path d="M1961 375H1715V293H259V313" class="flow management"/>
-    <path d="M1961 395H1692V547H1270V530" class="flow management"/>
-    <text x="1684" y="314" class="label">조회</text>
-    <path d="M1582 366H1727V415H1961" class="flow management"/>
-    <text x="1684" y="443" class="label">경고</text>
+    <path id="aks-node-group-link" d="M259 523V638" class="flow dependency"/>
+    <path id="image-workload-link" d="M596 523L790 913" class="flow dependency"/>
+    <text x="660" y="605" class="label">이미지</text>
+    <path id="workload-insights-link" d="M933 925V515" class="flow telemetry"/>
+    <path id="cluster-logs-link" d="M1270 735V530" class="flow telemetry"/>
+    <text x="955" y="625" class="label">관측 데이터</text>
+    <path id="agent-aks-query-link" d="M2025 313V295H259V313" class="flow management"/>
+    <path id="agent-log-query-link" d="M1961 410H1323" class="flow management"/>
+    <text x="1684" y="282" class="label">조회</text>
+    <path id="alert-agent-link" d="M1582 366L1961 380" class="flow management"/>
+    <text x="1710" y="352" class="label">경고</text>
   </g>
 </svg>
