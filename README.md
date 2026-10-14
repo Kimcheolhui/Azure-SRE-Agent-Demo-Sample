@@ -13,9 +13,9 @@ RG에 배포하며, 공유 AbortController 결함을 실제 HTTP 요청·CPU 연
 - [운영 지식](agent/knowledge/service-context.md), [조사 Skill](agent/skills/payment-investigation/SKILL.md)
 - [확인한 플랫폼 API와 공식 출처](docs/platform-api.md)
 
-검증용 Agent와 구성 시연용 Agent를 분리합니다. 후반의 예약 작업·Live Report는
-검증용 Agent에 준비되어 있습니다. 같은 업무 서비스를 조회하지만 서로 다른 Agent이며,
-고객에게 사전 준비된 결과 화면임을 구분해 설명합니다.
+이전 리허설에서는 검증용 Agent와 구성 시연용 Agent를 분리했습니다. 두 Agent는
+새 테스트 준비를 위해 삭제했으며, 예약 작업·Live Report 결과는 과거 검증 기록입니다.
+새 Agent는 사용자가 직접 구성합니다. 아래 명령은 이전 리허설의 내부 도구 안내입니다.
 
 ```bash
 node scripts/presenter.mjs --preview
@@ -63,6 +63,9 @@ azd provision
 
 환경 이름은 소문자·숫자·하이픈 3~16자로 지정합니다. 배포는 업무용 RG와 Agent용 RG,
 2-node AKS Standard, ACR Standard, 두 LAW/App Insights, 실제 SRE Agent를 생성합니다.
+새 테스트에는 `sredemokch14`와 다른 환경 이름을 사용합니다. 기존 로컬 azd 출력과
+artifacts는 과거 기록이며, 삭제된 Agent·리소스의 연결값을 재사용하지 않습니다.
+Log Analytics는 삭제 후 14일간 이름이 예약될 수 있습니다.
 기본 VM은 Standard_D4s_v6입니다. 관련 자원은 유료이며 별도 쿼터·모델 사용료가 있습니다.
 SRE Agent의 Stop은 상시 비용 종료와 다릅니다.
 

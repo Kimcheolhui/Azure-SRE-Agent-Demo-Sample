@@ -85,6 +85,8 @@ Microsoft 공식 [azure-resource-visualizer 스킬](https://github.com/microsoft
 
 현재 [azure.yaml](../azure.yaml)의 postprovision hook은 이미지 빌드·앱 배포까지 수행합니다. 8·9·10번 확인 전에는 이를 순수 인프라 전용 템플릿이라고 소개하지 않습니다. 과금·권한·배포 대상은 실제 실행 전에 확인합니다.
 
+새 테스트에는 기존 리허설의 `sredemokch14`와 다른 환경 이름을 사용합니다. 기존 로컬 azd 출력과 artifacts는 과거 기록이므로 연결값·kubeconfig·측정 결과를 재사용하지 않습니다. [Log Analytics 삭제 정책](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/delete-workspace)에 따라 로그는 14일간 복구 가능한 상태로 남고 이름이 예약될 수 있습니다. 로그 데이터 영구 삭제는 수행하지 않습니다.
+
 ## E. SRE Agent 직접 구성
 
 포털 버전·언어에 따라 메뉴 표시가 다를 수 있습니다. 아래는 넣을 값과 구성 목적이며, 실행 스크립트를 대신 입력하는 절차가 아닙니다.
