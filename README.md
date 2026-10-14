@@ -6,8 +6,8 @@ npm·azd·Git 명령은 이 폴더에서 실행합니다.
 Azure SRE Agent 고객 데모를 위한 독립 실행 패키지입니다. 기존 AKS 결제 샘플과 별도
 RG에 배포하며, 공유 AbortController 결함을 실제 HTTP 요청·CPU 연산·로그로 재현합니다.
 
-- [30분 진행 가이드와 아키텍처](docs/demo-guide.html)
-- [실제 Azure·Agent 검증 결과와 남은 단계](docs/verification.html)
+- [30분 진행 가이드와 직접 입력할 구성 내용](docs/demo-guide.md)
+- [리허설 검증 기록과 제약](docs/verification.md)
 - [Agent 정의](agent/payment-specialist.json), [Response Plan](agent/response-plan.json)
 - [온보딩 대화](agent/onboarding-chat.md), [Live Reports 작성 대화](agent/live-report-chat.md)
 - [운영 지식](agent/knowledge/service-context.md), [조사 Skill](agent/skills/payment-investigation/SKILL.md)
@@ -84,7 +84,9 @@ node scripts/deploy.mjs
 
 ## C. SRE Agent 설정
 
-각 항목을 따로 실행해 고객에게 연결 과정을 보여주거나 `setup`으로 준비합니다.
+사용자가 직접 포털·채팅에서 구성합니다. 화면별 값·지침·문서·Skill 본문은
+[진행 가이드](docs/demo-guide.md#e-sre-agent-직접-구성)에 정리했습니다.
+아래 API 도구는 내부 회귀 검증용이며 사용자 구성 절차에 사용하지 않습니다.
 
 ```bash
 node scripts/agent.mjs status
@@ -157,6 +159,10 @@ check는 리소스를 변경하지 않고 최신 요청·격리·p95를 다시 �
 최대 15분이며 시간 초과 시 준비 완료로 처리하지 않습니다.
 
 ## E. 실제 대화·보고서
+
+사용자는 [온보딩 채팅](agent/onboarding-chat.md)과
+[Live Reports 작성 내용](agent/live-report-chat.md)을 포털에서 직접 입력합니다.
+아래 명령은 내부 검증 도구 목록이며 이를 실행하는 방식으로 구성하지 않습니다.
 
 ```bash
 node scripts/chat.mjs start onboarding-discovery

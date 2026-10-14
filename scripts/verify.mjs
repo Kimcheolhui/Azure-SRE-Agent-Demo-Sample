@@ -27,13 +27,14 @@ for (const filename of await walk(root)) {
   }
 }
 record('source syntax, language and credential scan', 'Source files only; runtime credentials/artifacts excluded.');
-const guide = await readFile(path.join(root, 'docs/demo-guide.html'), 'utf8');
-for (const match of guide.matchAll(/(?:href|src)="([^"]+)"/g)) {
+const guide = await readFile(path.join(root, 'docs/demo-guide.md'), 'utf8');
+const notes = await readFile(path.join(root, 'docs/verification.md'), 'utf8');
+for (const match of `${guide}\n${notes}`.matchAll(/!?\[[^\]]*\]\(([^)]+)\)/g)) {
   const target = match[1];
   if (/^(https?:|#)/.test(target)) continue;
-  await stat(path.resolve(root, 'docs', target));
+  await stat(path.resolve(root, 'docs', decodeURIComponent(target.split('#')[0])));
 }
-record('guide links and assets', 'All relative links resolve.');
+record('Markdown links and assets', 'All relative links in the guide and verification notes resolve.');
 for (const command of [...guide.matchAll(/node scripts\/([a-z-]+\.mjs)/g), ...(await readFile(path.join(root, 'README.md'), 'utf8')).matchAll(/node scripts\/([a-z-]+\.mjs)/g)]) await stat(path.join(root, 'scripts', command[1]));
 record('documented executable paths', 'All referenced scripts exist.');
 run('npm', ['test'], { stdio: ['ignore', 'pipe', 'pipe'] });
