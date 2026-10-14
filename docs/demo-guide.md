@@ -379,3 +379,53 @@ Payments Service Live Report를 만들어 주세요. 연결된 업무용 Log Ana
 기존 API 설정 스크립트는 내부 회귀 검증용 도구로 남아 있으며 이 가이드의 사용자 구성 절차에 사용하지 않습니다. Azure 배포·Agent 설정·권한 변경을 제가 대신 실행하지 않습니다.
 
 [리허설 검증 결과와 제약](verification.md)
+
+## I. 리소스 정리
+
+실습 종료 후 저장소 루트에서 실행합니다. 이 환경의 AKS·ACR·관측 리소스·SRE Agent와 Agent 내부 구성·조사 기록을 삭제하므로 필요한 자료를 먼저 보관합니다. 삭제 대상은 `sredemolive` 데모이며, 기존 Payments·Study 환경은 포함하지 않습니다.
+
+### 구독 역할 정리
+
+Agent를 삭제하기 전에 UAMI principal ID를 확보합니다. 리소스 그룹 밖의 구독 범위 역할 할당은 그룹 삭제만으로 정리됐다고 가정하지 않습니다.
+
+```bash
+azd env select sredemolive
+AGENT_PRINCIPAL_ID=$(azd env get-value SRE_AGENT_PRINCIPAL_ID)
+az role assignment list \
+	--subscription aa3a0813-c921-4974-abb8-a0a68afd72a0 \
+	--assignee-object-id "$AGENT_PRINCIPAL_ID" \
+	--scope /subscriptions/aa3a0813-c921-4974-abb8-a0a68afd72a0 \
+	--role 749f88d5-cbae-40b8-bcfc-e573ddc772fa \
+	--fill-principal-name false \
+	--query "[].{id:id,principalId:principalId,scope:scope}" --output json
+```
+
+principal ID 조회가 실패하거나 비어 있으면 진행하지 않습니다. 역할 조회 결과가 이 Agent의 ID·해당 구독 범위인지 확인하고, 출력된 `id`를 아래 `<ROLE_ASSIGNMENT_ID>`에 넣어 해당 할당만 삭제합니다. 조회가 성공했고 결과가 빈 배열이면 역할 삭제는 건너뜁니다. 다른 사용자·Agent의 역할은 삭제하지 않습니다.
+
+```bash
+az role assignment delete \
+	--subscription aa3a0813-c921-4974-abb8-a0a68afd72a0 \
+	--ids "<ROLE_ASSIGNMENT_ID>"
+```
+
+### 환경 삭제
+
+```bash
+azd down --environment sredemolive
+```
+
+표시되는 구독과 삭제 대상에 `rg-sredemolive-workload`, `rg-sredemolive-agent`가 맞는지 확인한 뒤 승인합니다. 그룹 안에 나중에 추가한 리소스도 삭제될 수 있습니다. AKS의 관리 노드 그룹은 클러스터 삭제에 따라 함께 정리되는 대상입니다. 삭제가 완료될 때까지 기다립니다.
+
+`--force`는 삭제 확인을 생략하고, `--purge`는 지원되는 소프트 삭제 리소스의 영구 삭제 확인을 생략하므로 기본 명령에 추가하지 않습니다. Log Analytics는 기본 정책에 따라 데이터가 14일간 복구 가능 상태로 남고 이름이 예약될 수 있습니다. 로컬 소스와 artifacts는 `azd down`으로 삭제되지 않지만, 삭제된 환경의 연결값과 kubeconfig는 이후 재사용하지 않습니다.
+
+### 삭제 확인
+
+```bash
+az group list --subscription aa3a0813-c921-4974-abb8-a0a68afd72a0 \
+	--query "[?name=='rg-sredemolive-workload' || name=='rg-sredemolive-agent' || tags.\"aks-managed-cluster-rg\"=='rg-sredemolive-workload'].name" \
+	--output json
+```
+
+조회가 성공하고 결과가 `[]`인지 확인합니다. 위에서 확보한 principal ID로 역할 조회도 다시 실행해 남은 구독 역할이 없는지 확인합니다. 오류가 발생하거나 대상이 남아 있으면 정리 완료로 판단하지 않습니다.
+
+명령 참고: [azd down](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/reference#azd-down), [Log Analytics 삭제 정책](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/delete-workspace).
