@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2400 1460" role="img" aria-labelledby="title description"><metadata id="official-icon-sources">{"azureIcons":"https://learn.microsoft.com/en-us/azure/architecture/icons/","azureBundle":"Azure_Public_Service_Icons_V24.zip","entraIcons":"https://learn.microsoft.com/en-us/entra/architecture/architecture-icons","assets":{"subscription":"Azure_Public_Service_Icons/Icons/general/10002-icon-service-Subscriptions.svg","rg":"Azure_Public_Service_Icons/Icons/general/10007-icon-service-Resource-Groups.svg","terminal":"Azure_Public_Service_Icons/Icons/general/10796-icon-service-Dev-Console.svg","aks":"Azure_Public_Service_Icons/Icons/containers/10023-icon-service-Kubernetes-Services.svg","acr":"Azure_Public_Service_Icons/Icons/containers/10105-icon-service-Container-Registries.svg","vnet":"Azure_Public_Service_Icons/Icons/networking/10061-icon-service-Virtual-Networks.svg","nsg":"Azure_Public_Service_Icons/Icons/networking/10067-icon-service-Network-Security-Groups.svg","vmss":"Azure_Public_Service_Icons/Icons/compute/10034-icon-service-VM-Scale-Sets.svg","lb":"Azure_Public_Service_Icons/Icons/networking/10062-icon-service-Load-Balancers.svg","public-ip":"Azure_Public_Service_Icons/Icons/networking/10069-icon-service-Public-IP-Addresses.svg","insights":"Azure_Public_Service_Icons/Icons/monitor/00012-icon-service-Application-Insights.svg","logs":"Azure_Public_Service_Icons/Icons/monitor/00009-icon-service-Log-Analytics-Workspaces.svg","monitor":"Azure_Public_Service_Icons/Icons/monitor/00001-icon-service-Monitor.svg","identity":"Azure_Public_Service_Icons/Icons/identity/10227-icon-service-Managed-Identities.svg","entra":"Microsoft Entra architecture icons - Oct 2023/Microsoft Entra color icons SVG/Microsoft Entra ID color icon.svg","sre":"https://sre.azure.com/SreAgent.svg","github":"https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png"},"processing":"Original icon bytes embedded unchanged. No cropping, recoloring, rotation or distortion."}</metadata>
   <title id="title">Azure SRE Agent - AKS demo infrastructure</title>
-  <desc id="description">Infrastructure defined by the demo templates: an AKS resource, Container Registry and workload monitoring in the workload resource group; virtual network, node subnet, VM Scale Set and Load Balancer in the AKS-managed node resource group; SRE Agent, managed identities and separate monitoring in the Agent resource group. Arrows show image pulls, workload telemetry, alert investigation and infrastructure queries.</desc>
+  <desc id="description">Infrastructure defined by the demo templates: AKS, ACR and workload monitoring in the workload resource group; virtual network, node subnet, Node Pool and Load Balancer in the AKS-managed node resource group; SRE Agent, managed identities and separate monitoring in the Agent resource group. The Load Balancer connects to the node subnet. Arrows show image pulls, workload telemetry, alert investigation and infrastructure queries.</desc>
   <style>
     text{font-family:Pretendard,"Segoe UI",Arial,sans-serif;fill:#242424;font-size:23px;letter-spacing:0}
     .heading{font-size:42px;font-weight:700}.scope-title{font-size:26px;font-weight:600}.product{font-size:26px;font-weight:600}
@@ -49,13 +49,11 @@
     <text x="175" y="260" class="scope-title">Workload resource group</text>
     <g id="aks" data-node="resource">
       <use href="#icon-aks" x="218" y="325" width="82" height="82"/>
-      <text x="259" y="455" class="product center">Azure Kubernetes Service</text>
-      <text x="259" y="493" class="small center">AKS</text>
+      <text x="259" y="455" class="product center">AKS</text>
     </g>
     <g id="acr" data-node="resource">
       <use href="#icon-acr" x="555" y="325" width="82" height="82"/>
-      <text x="596" y="455" class="product center">Container Registry</text>
-      <text x="596" y="493" class="small center">ACR</text>
+      <text x="596" y="455" class="product center">ACR</text>
     </g>
     <g id="application-insights" data-node="resource">
       <use href="#icon-insights" x="892" y="325" width="82" height="82"/>
@@ -64,12 +62,10 @@
     <g id="log-analytics" data-node="resource">
       <use href="#icon-logs" x="1229" y="325" width="82" height="82"/>
       <text x="1270" y="455" class="product center">Log Analytics</text>
-      <text x="1270" y="493" class="small center">Workspace</text>
     </g>
     <g id="azure-monitor-alert" data-node="resource">
       <use href="#icon-monitor" x="1500" y="330" width="70" height="70"/>
       <text x="1535" y="455" class="product center">Azure Monitor</text>
-      <text x="1535" y="493" class="small center">Alert rule</text>
     </g>
     <path d="M983 366H1217" class="flow telemetry"/>
     <path d="M1323 366H1488" class="flow telemetry"/>
@@ -89,9 +85,7 @@
         <text x="1206" y="917" class="small center">NSG</text>
         <g id="node-pool" data-node="compute">
           <use href="#icon-vmss" x="215" y="932" width="90" height="90"/>
-          <text x="260" y="1063" class="product center">VM Scale Set</text>
-          <text x="260" y="1103" class="small center">System node pool</text>
-          <text x="260" y="1141" class="small center">2 nodes</text>
+          <text x="260" y="1063" class="product center">Node Pool</text>
         </g>
         <g id="payments-namespace" data-boundary="logical-namespace">
           <rect x="470" y="925" width="615" height="260" class="overlay"/>
@@ -113,9 +107,8 @@
     <g id="load-balancer" data-node="network">
       <use href="#icon-lb" x="1435" y="930" width="84" height="84"/>
       <text x="1477" y="1063" class="product center">Load Balancer</text>
-      <text x="1477" y="1103" class="small center">Standard</text>
     </g>
-    <path d="M1320 980H1423" class="flow dependency"/>
+    <path id="subnet-lb-link" d="M1285 980H1423" class="flow dependency"/>
   </g>
   <g id="agent-rg" data-boundary="resource-group">
     <rect x="1750" y="215" width="550" height="1110" class="scope"/>
@@ -139,7 +132,6 @@
       <text x="1881" y="1074" class="center">Insights</text>
       <use href="#icon-logs" x="2131" y="909" width="76" height="76"/>
       <text x="2169" y="1035" class="center">Log Analytics</text>
-      <text x="2169" y="1074" class="small center">Workspace</text>
       <path d="M1931 947H2119" class="flow telemetry"/>
     </g>
     <path id="agent-telemetry-link" d="M1915 500L1881 897" class="flow telemetry"/>
