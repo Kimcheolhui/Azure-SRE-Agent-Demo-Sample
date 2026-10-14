@@ -37,11 +37,7 @@
 
 업무용 RG에는 AKS·ACR·업무용 Application Insights·LAW가 있습니다. `payment-api`는 `payment-provider`를 호출하며 stable과 canary는 다른 이미지로 실행할 수 있습니다. Agent의 자체 실행 로그와 업무용 로그는 별개입니다.
 
-현재 그림은 간단한 구성도입니다. 다음 디자인에서는 공식 Azure 서비스 아이콘, Resource Group 경계, AKS 내부 구성, 요청·관측·조사 경로를 구분합니다. 인프라 구성 범위가 확정되면 그림도 그 범위에 맞춥니다.
-
-Microsoft 공식 [azure-resource-visualizer 스킬](https://github.com/microsoft/azure-skills/tree/main/skills/azure-resource-visualizer)은 리소스 관계를 분석해 **Mermaid 다이어그램**을 만듭니다. 확인한 설치 지표는 약 55만 회이며, Microsoft 소스 저장소는 약 1.6천 stars입니다. 발표용 디자인은 [공식 Azure 아이콘](https://learn.microsoft.com/en-us/azure/architecture/icons/)과 정보 배치를 별도로 다듬어야 합니다.
-
-이 스킬을 설치하거나 실제 Azure 리소스 분석을 실행하지는 않았습니다.
+구성도는 현재 배포 템플릿의 인프라를 나타냅니다. 업무용 RG·AKS 관리 노드 RG·Agent RG를 구분하고, VNet·노드 서브넷·노드 풀과 주요 리소스 연결만 표시합니다. [Microsoft 공식 Azure 아이콘](https://learn.microsoft.com/en-us/azure/architecture/icons/)과 SRE Agent 제품 로고를 사용했습니다. 운영자·팀 지식·제품 기능·프로토콜 설명은 그림에서 제외했습니다.
 
 ## C. 30분 진행 순서
 
