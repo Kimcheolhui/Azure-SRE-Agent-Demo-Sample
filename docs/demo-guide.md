@@ -258,7 +258,18 @@ node scripts/demo.mjs baseline
 node scripts/demo.mjs incident
 ```
 
-`baseline`은 정상 서비스에 새 요청을 보내 기준선을 확인합니다. 포털에서 정상 요청을 확인한 뒤 `incident`를 실행합니다. `incident`는 v1.9 canary를 배포하고 동시 요청 A·B·C와 후속 요청을 발생시킨 뒤 새 Fired 경고를 기다립니다. 기다리는 동안 포털에서 504와 경고·자동 조사 진행을 보여줍니다.
+`baseline`은 카드·계좌 각각 20건, 총 40건의 결제 요청으로 기준선을 확인합니다. 한 요청의 응답을 받은 뒤 다음 요청을 보내는 순차 방식입니다. 포털에서 정상 요청을 확인한 뒤 `incident`를 실행합니다.
+
+`incident`는 v1.9 canary에 A·B·C 3건과 일반 결제 요청 20건(카드·계좌 각 10건), 총 23건을 보냅니다. A와 B는 2.9초 간격으로 시작해 겹쳐 실행하고, 두 응답을 받은 뒤 C를 보냅니다. 이후 일반 요청은 순차 실행합니다. 요청 간 취소 전파를 재현하기 위한 A/B 동시 실행은 유지합니다. `/version` 조회는 이 결제 요청 수에 포함하지 않습니다.
+
+각 응답이 완료되면 요청 URL·HTTP 상태·소요 시간·승인 여부 또는 오류·인스턴스·요청 ID를 터미널에 한 줄로 즉시 표시합니다. 번호는 응답 완료 순서이며 A/B는 완료 순서가 바뀔 수 있습니다. 출력 형식 예시:
+
+```text
+[baseline 1/40] GET /pay?method=card -> HTTP 200 18ms approved=true instance="payment-api-pod" release="v1.8" requestId="example-request"
+[incident 1/23 A] GET /pay?method=card&signatureIterations=40000000 -> HTTP 504 3005ms error="authorization_timeout" instance="canary-pod" release="v1.9" requestId="example-request"
+```
+
+`incident`는 요청 실행 후 새 Fired 경고를 기다립니다. 기다리는 동안 포털에서 504와 경고·자동 조사 진행을 보여줍니다.
 
 ### 포털 관측
 
@@ -281,7 +292,7 @@ node scripts/demo.mjs recover
 |---|---|
 | 기준선 | 정상 이미지에서 카드·계좌 각 20건의 성공·p95 확인 |
 | 장애 설명 | 일부 인스턴스의 새 버전 적용 뒤 504가 발생한다는 증상만 설명 |
-| 실제 발생 | v1.9 canary와 동시 요청 A·B·C 실행 |
+| 실제 발생 | v1.9 canary에 A/B 동시 요청, 이후 C와 일반 요청 실행          |
 | 접수 | 실제 경고·Response Plan·담당·조사 스레드 확인 |
 | 조사 관찰 | 요청·인스턴스·취소 로그·배포 코드의 근거 연결 |
 | 결과 확인 | 원인·영향·권고 조치·미확인 항목 대조 |

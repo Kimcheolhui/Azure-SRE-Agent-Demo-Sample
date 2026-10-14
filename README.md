@@ -150,6 +150,14 @@ node scripts/demo.mjs reset
 node scripts/demo.mjs status
 ```
 
+결제 요청 수는 baseline 40건(카드·계좌 각 20건), incident 23건(A·B·C 3건과
+카드·계좌 각 10건), recover/check 43건(A·B·C 3건과 카드·계좌 각 20건)입니다.
+`/version` 조회는 별도입니다. 일반 요청은 응답을 받은 뒤 다음 요청을 보내며,
+장애·복구 격리 확인의 A/B만 의도적으로 겹쳐 실행하고 C는 두 응답 이후 실행합니다.
+각 요청의 응답이 완료될 때 URL·HTTP 상태·소요 시간·결과·인스턴스·요청 ID를
+터미널에 한 줄로 즉시 출력합니다. Pod 실행도 실시간으로 출력하며 마지막 집계와
+실측 JSON 저장은 유지합니다.
+
 incident는 v1.9 canary를 새 Pod로 시작합니다. 같은 Pod 내부에서 A의 고비용 카드 서명
 요청, A 시작 2.9초 후 B의 카드 요청, 그 뒤 C의 계좌 요청을 실행합니다. 실제 provider
 PBKDF2 계산량으로 A가 3초 제한을 넘습니다. 결함 버전은 공유 signal 때문에 B·C도 실패합니다.

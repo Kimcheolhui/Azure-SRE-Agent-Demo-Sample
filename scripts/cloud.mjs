@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn } from "node:child_process";
 import { mkdir } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -10,6 +10,31 @@ export function run(command, args, options = {}) {
 }
 export function json(command, args, options) {
   return JSON.parse(run(command, args, options));
+}
+export function runStreaming(command, args, { input, onStderr = chunk => process.stderr.write(chunk) } = {}) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, { cwd: root, stdio: ["pipe", "pipe", "pipe"] });
+    let stdout = "";
+    child.stdout.setEncoding("utf8");
+    child.stderr.setEncoding("utf8");
+    child.stdout.on("data", chunk => {
+      stdout += chunk;
+      if (Buffer.byteLength(stdout) > 20 * 1024 * 1024) {
+        child.kill();
+        reject(new Error(`${command} output exceeded the buffer limit`));
+      }
+    });
+    child.stderr.on("data", chunk => {
+      try { onStderr(chunk); } catch (error) { child.kill(); reject(error); }
+    });
+    child.once("error", reject);
+    child.once("close", (code, signal) => {
+      if (code === 0) resolve(stdout);
+      else reject(new Error(`${command} exited ${code ?? signal}`));
+    });
+    child.stdin.on("error", reject);
+    child.stdin.end(input);
+  });
 }
 export function deploymentOutputs(outputs) {
   return Object.fromEntries(Object.entries(outputs).map(([key, value]) => [key.toUpperCase(), value.value]));

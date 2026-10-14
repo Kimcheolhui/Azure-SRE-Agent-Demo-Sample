@@ -3,8 +3,15 @@ import { spawn } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { root, environment, kubeconfig, kubectl, validateRelease } from './cloud.mjs';
-import { healthyTraffic, cascadeTraffic, summarize } from './traffic.mjs';
+import {
+  root,
+  environment,
+  kubeconfig,
+  kubectl,
+  runStreaming,
+  validateRelease,
+} from "./cloud.mjs";
+import { healthyTraffic, createTrafficLogger, summarize } from "./traffic.mjs";
 import { evidenceBinding } from './evidence.mjs';
 import { waitForAlertState } from './alerts.mjs';
 
@@ -45,8 +52,23 @@ if (action === 'incident' || action === 'recover' || action === 'check') {
   if (!pod) throw new Error('No ready canary Pod available');
   const trafficSource = await readFile(path.join(root, 'scripts/traffic.mjs'), 'utf8');
   const count = action === 'incident' ? 10 : 20;
-  const program = `${trafficSource}\nconst baseUrl='http://127.0.0.1:8080';\nconst version=await(await fetch(baseUrl+'/version')).json();\nconst results=await cascadeTraffic(baseUrl);\nresults.push(...await healthyTraffic(baseUrl,${count}));\nconsole.log(JSON.stringify({version,results}));`;
-  const { version, results } = JSON.parse(kubectl(filename, ['-n', 'payments', 'exec', '-i', pod.metadata.name, '--', 'node', '--input-type=module'], program));
+  const program = `${trafficSource}\nconst baseUrl='http://127.0.0.1:8080';\nconst version=await(await fetch(baseUrl+'/version')).json();\nconst logger=createTrafficLogger(${JSON.stringify(action)},${3 + count * 2},line=>console.error(line));\nconst results=await cascadeTraffic(baseUrl,logger);\nresults.push(...await healthyTraffic(baseUrl,${count},logger));\nconsole.log(JSON.stringify({version,results}));`;
+  const { version, results } = JSON.parse(await runStreaming(
+      "kubectl",
+      [
+        "--kubeconfig",
+        filename,
+        "-n",
+        "payments",
+        "exec",
+        "-i",
+        pod.metadata.name,
+        "--",
+        "node",
+        "--input-type=module",
+      ],
+      { input: program, onStderr: chunk => process.stdout.write(chunk) },
+    ));
   const deployments = JSON.parse(kubectl(filename, ['-n', 'payments', 'get', 'deployments', '-l', 'application=payments', '-o', 'json']));
   const deploymentImages = Object.fromEntries(deployments.items.map(item => [item.metadata.name, item.spec.template.spec.containers[0].image]));
   const evidence = { ...binding, runId: run?.id, action, utc: new Date().toISOString(), deploymentImages, clientLocation: pod.metadata.name, imageID: pod.status.containerStatuses[0].imageID, version, results, summary: summarize(results) };
@@ -82,7 +104,7 @@ try {
   });
   const url = `http://127.0.0.1:${port}`;
   const version = await (await fetch(`${url}/version`)).json();
-  const results = await healthyTraffic(url);
+  const results = await healthyTraffic(url, 20, createTrafficLogger(action, 40));
   for (const item of summarize(results)) { assert.equal(item.failures, 0); assert(item.p95Ms <= 1000); }
   const evidence = { ...binding, action, utc: new Date().toISOString(), version, results, summary: summarize(results) };
   await writeFile(path.join(root, `artifacts/${action}.json`), JSON.stringify(evidence, null, 2));
