@@ -85,6 +85,7 @@ resource alert 'Microsoft.Insights/scheduledQueryRules@2023-12-01' = {
     windowSize: 'PT5M'
     scopes: [workspace.id]
     autoMitigate: true
+    resolveConfiguration: { autoResolved: true, timeToResolve: 'PT5M' }
     skipQueryValidation: true
     criteria: { allOf: [{ query: 'AppRequests | where AppRoleName == "payment-api" and ResultCode == "504" | summarize FailedRequests=count()', timeAggregation: 'Maximum', metricMeasureColumn: 'FailedRequests', operator: 'GreaterThanOrEqual', threshold: 5, failingPeriods: { numberOfEvaluationPeriods: 1, minFailingPeriodsToAlert: 1 } }] }
   }

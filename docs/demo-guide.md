@@ -111,6 +111,8 @@ azd provision
 
 Azure Portal → Monitor → Alerts → Alert rules에서 `payment-api-errors-aks-sredemolive`를 엽니다. payment-api의 504가 5분 창에서 5건 이상이면 Sev2로 발화하고, 1분 주기로 평가하며 조건이 해소되면 자동 해제됩니다. 비교 조건은 `GreaterThanOrEqual`, 임계값은 `5`입니다. 포털에서는 구성된 쿼리·대상 LAW·평가 조건을 보여주며 규칙을 새로 만들지 않습니다. 원본은 [workload.bicep](../infra/workload.bicep)입니다.
 
+자동 해제는 `resolveConfiguration.timeToResolve: PT5M`으로 지정합니다. 최근 5분의 504가 5건 미만인 정상 판정이 5분간 유지되면 경고를 Resolved로 전환하도록 요청하는 설정입니다. 실패 0건을 요구하는 조건은 아닙니다. 기존 실패가 집계 창에서 빠지는 데 최대 약 5분이 더 걸릴 수 있어, 복구 후 총 5분 안에 해제된다고 보장하지 않습니다. 평가·로그 수집 지연도 별도입니다. [해제 설정](https://learn.microsoft.com/en-us/azure/templates/microsoft.insights/2023-12-01/scheduledqueryrules#ruleresolveconfiguration)
+
 `ENABLE_INCIDENT_SCANNING=true`는 Agent UAMI에 구독 범위 Monitoring Contributor를 부여합니다. 업무용 RG의 리소스·로그·AKS 읽기 역할은 별도로 azd가 할당합니다. 이는 IAM 준비이며 Agent의 연결 설정과는 구분합니다. 리소스 비용과 실제 권한 범위는 배포 전에 확인합니다.
 
 새 테스트에는 기존 리허설의 `sredemokch14`와 다른 환경 이름을 사용합니다. 기존 로컬 azd 출력과 artifacts는 과거 기록이므로 연결값·kubeconfig·측정 결과를 재사용하지 않습니다. [Log Analytics 삭제 정책](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/delete-workspace)에 따라 로그는 14일간 복구 가능한 상태로 남고 이름이 예약될 수 있습니다. 로그 데이터 영구 삭제는 수행하지 않습니다.
@@ -304,7 +306,7 @@ node scripts/demo.mjs recover
 
 `recover`는 canary를 정상 v1.8로 바꾸고 요청 간 취소 격리와 카드·계좌 각각 새 요청 20건을 검증한 뒤 경고 해제를 기다립니다. 포털에서는 복구 시각 이후 새 요청의 실패율·지연과 경고의 Resolved 상태를 확인합니다. 최근 30분 집계에는 이전 장애가 남아 있으므로 장애·복구 UTC 구간을 나눠 비교합니다. 격리 검증의 고비용 요청 A에서 발생하는 단일 504는 다른 요청으로 전파되지 않아야 합니다.
 
-경고 발화·해제는 비동기 평가이며 각 대기는 최대 15분입니다. 시간 초과나 검증 실패 시 완료로 소개하지 않습니다. 반복 시연은 이전 경고가 해제된 후 새 UTC 구간으로 시작합니다.
+경고 발화·해제는 비동기 평가입니다. 해제 확인 시간은 정상 판정 후 5분이며, 기존 실패의 5분 집계 창과 평가·수집 지연이 더해질 수 있습니다. 스크립트의 최대 15분 대기는 해제 설정과 별개인 안전 타임아웃입니다. 시간 초과나 검증 실패 시 완료로 소개하지 않습니다. 반복 시연은 이전 경고가 해제된 후 새 UTC 구간으로 시작합니다.
 
 | 단계 | 수행 내용 |
 |---|---|
