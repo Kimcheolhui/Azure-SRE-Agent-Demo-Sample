@@ -14,14 +14,51 @@ import {
 import { healthyTraffic, createTrafficLogger, summarize } from "./traffic.mjs";
 import { evidenceBinding } from './evidence.mjs';
 import { waitForAlertState } from './alerts.mjs';
+import { runTrafficOnly } from "./traffic-only.mjs";
 
 const action = process.argv[2];
-if (!['baseline', 'incident', 'recover', 'check', 'reset', 'status'].includes(action)) throw new Error('Usage: node scripts/demo.mjs baseline|incident|recover|check|reset|status');
+if (![
+    "baseline",
+    "incident",
+    "recover",
+    "check",
+    "reset",
+    "status",
+    "traffic-normal",
+    "traffic-fail",
+  ].includes(action)) throw new Error("Usage: node scripts/demo.mjs baseline|incident|recover|check|reset|status|traffic-normal|traffic-fail");
 const values = environment();
 const filename = await kubeconfig(values);
 const release = JSON.parse(await readFile(path.join(root, 'artifacts/release.json'), 'utf8'));
 validateRelease(values, release);
 const binding = evidenceBinding(values, release);
+if (["traffic-normal", "traffic-fail"].includes(action)) {
+  const traffic = await runTrafficOnly(action, filename, release);
+  const evidence = {
+    ...binding,
+    action,
+    utc: new Date().toISOString(),
+    ...traffic,
+  };
+  await writeFile(
+    path.join(root, "artifacts", `${action}.json`),
+    JSON.stringify(evidence, null, 2),
+  );
+  console.log(
+    JSON.stringify(
+      {
+        action,
+        utc: evidence.utc,
+        version: evidence.version,
+        clientLocation: evidence.clientLocation,
+        summary: evidence.summary,
+      },
+      null,
+      2,
+    ),
+  );
+  process.exit(0);
+}
 const runPath = path.join(root, 'artifacts', `demo-run-${values.SRE_AGENT_NAME}.json`);
 let run;
 try { run = JSON.parse(await readFile(runPath, 'utf8')); } catch (error) { if (error.code !== 'ENOENT') throw error; }

@@ -158,6 +158,20 @@ node scripts/demo.mjs status
 터미널에 한 줄로 즉시 출력합니다. Pod 실행도 실시간으로 출력하며 마지막 집계와
 실측 JSON 저장은 유지합니다.
 
+기존 Pod를 바꾸지 않고 추가 트래픽만 보낼 수 있습니다.
+
+```bash
+node scripts/demo.mjs traffic-normal
+node scripts/demo.mjs traffic-fail
+```
+
+`traffic-normal`은 stable v1.8, `traffic-fail`은 `incident`로 장애가 발생한 canary v1.9를
+대상으로 카드·계좌 각 20건을 순차 전송합니다. Pod 교체·scale·재시작이나 경고 대기는
+하지 않습니다. 이미지·준비 상태와 실제 응답을 검증하며, 기존 incident/recover 증거를
+덮어쓰지 않고 `artifacts/traffic-normal.json`, `artifacts/traffic-fail.json`에 저장합니다.
+실패 Pod가 자동 재시작되어 504가 나오지 않으면 오류로 알리며 새 장애를 주입하지 않습니다.
+반복 요청이 새 자동 조사를 보장하지는 않습니다.
+
 incident는 v1.9 canary를 새 Pod로 시작합니다. 같은 Pod 내부에서 A의 고비용 카드 서명
 요청, A 시작 2.9초 후 B의 카드 요청, 그 뒤 C의 계좌 요청을 실행합니다. 실제 provider
 PBKDF2 계산량으로 A가 3초 제한을 넘습니다. 결함 버전은 공유 signal 때문에 B·C도 실패합니다.

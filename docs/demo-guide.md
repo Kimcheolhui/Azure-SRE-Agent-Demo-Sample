@@ -271,6 +271,24 @@ node scripts/demo.mjs incident
 
 `incident`는 요청 실행 후 새 Fired 경고를 기다립니다. 기다리는 동안 포털에서 504와 경고·자동 조사 진행을 보여줍니다.
 
+### 추가 트래픽
+
+정상 stable v1.8 Pod에 추가 요청만 보낼 때 실행합니다.
+
+```bash
+node scripts/demo.mjs traffic-normal
+```
+
+`incident` 실행 후 장애 상태인 canary v1.9 Pod에 실패 요청만 다시 보낼 때 실행합니다.
+
+```bash
+node scripts/demo.mjs traffic-fail
+```
+
+두 명령은 매번 카드·계좌 각 20건, 총 40건을 순차 전송하고 응답을 즉시 한 줄씩 출력합니다. 기존 Pod에 직접 요청하며 이미지 변경·scale·재시작과 경고 발화·해제 대기를 하지 않습니다. 여러 번 실행해도 기존 인시던트 실행 기록은 바꾸지 않으며, 측정은 각각 `artifacts/traffic-normal.json`, `artifacts/traffic-fail.json`에 별도로 저장합니다.
+
+대상 이미지가 다르거나 준비된 Pod가 없으면 중단합니다. `traffic-fail`은 장애를 새로 주입하지 않으므로 Pod가 재시작되어 실패 상태가 사라졌다면 504가 아닌 응답을 오류로 알립니다. 추가 실패 요청이 새 경고나 자동 조사를 보장하지는 않으며, 같은 경고의 조사 병합·쿨다운이 적용될 수 있습니다. 새 장애 재현과 새 경고 확인은 기존 `incident`를 사용합니다.
+
 ### 포털 관측
 
 - Application Insights `appi-aks-sredemolive` → Failures·Performance: 최근 30분으로 맞추고 요청량·실패·지연과 개별 요청·종속성을 확인합니다.
