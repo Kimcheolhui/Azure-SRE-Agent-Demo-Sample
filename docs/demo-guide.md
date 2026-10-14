@@ -109,7 +109,7 @@ azd provision
 
 ### 미리 구성된 경고 설명
 
-Azure Portal → Monitor → Alerts → Alert rules에서 `payment-api-errors-aks-sredemolive`를 엽니다. payment-api의 504가 5분 창에서 2건을 초과하면 Sev2로 발화하고, 1분 주기로 평가하며 조건이 해소되면 자동 해제됩니다. 포털에서는 구성된 쿼리·대상 LAW·평가 조건을 보여주며 규칙을 새로 만들지 않습니다. 원본은 [workload.bicep](../infra/workload.bicep)입니다.
+Azure Portal → Monitor → Alerts → Alert rules에서 `payment-api-errors-aks-sredemolive`를 엽니다. payment-api의 504가 5분 창에서 5건 이상이면 Sev2로 발화하고, 1분 주기로 평가하며 조건이 해소되면 자동 해제됩니다. 비교 조건은 `GreaterThanOrEqual`, 임계값은 `5`입니다. 포털에서는 구성된 쿼리·대상 LAW·평가 조건을 보여주며 규칙을 새로 만들지 않습니다. 원본은 [workload.bicep](../infra/workload.bicep)입니다.
 
 `ENABLE_INCIDENT_SCANNING=true`는 Agent UAMI에 구독 범위 Monitoring Contributor를 부여합니다. 업무용 RG의 리소스·로그·AKS 읽기 역할은 별도로 azd가 할당합니다. 이는 IAM 준비이며 Agent의 연결 설정과는 구분합니다. 리소스 비용과 실제 권한 범위는 배포 전에 확인합니다.
 
