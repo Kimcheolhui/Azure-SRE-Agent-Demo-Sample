@@ -13,20 +13,11 @@ RG에 배포하며, 공유 AbortController 결함을 실제 HTTP 요청·CPU 연
 - [운영 지식](agent/knowledge/service-context.md), [조사 Skill](agent/skills/payment-investigation/SKILL.md)
 - [확인한 플랫폼 API와 공식 출처](docs/platform-api.md)
 
-이전 리허설에서는 검증용 Agent와 구성 시연용 Agent를 분리했습니다. 두 Agent는
-새 테스트 준비를 위해 삭제했으며, 예약 작업·Live Report 결과는 과거 검증 기록입니다.
-새 Agent는 사용자가 직접 구성합니다. 아래 명령은 이전 리허설의 내부 도구 안내입니다.
-
-```bash
-node scripts/presenter.mjs --preview
-node scripts/presenter.mjs --provision
-export DEMO_TARGET=presenter
-node scripts/agent.mjs status
-unset DEMO_TARGET
-```
-
-시연용 Agent 후처리가 중단되면 `node scripts/presenter.mjs --recover`로 실제 완료된
-배포 출력을 복구합니다. 새 Agent는 자체 관측 리소스와 상시 비용이 추가됩니다.
+권장 환경은 `sredemolive`, 구독은 `aa3a0813-c921-4974-abb8-a0a68afd72a0`,
+리전은 `eastus2`입니다. azd로 인프라·앱·SRE Agent 리소스·권한을 준비하고,
+Agent 연결과 기능은 사용자가 직접 포털·채팅에서 구성합니다. 장애·복구는
+스크립트로 제어하고 트래픽은 포털에서 확인합니다. 같은 Agent로 전체 시연을
+진행하며 별도 presenter Agent를 만들지 않습니다. 이전 리허설 자원은 삭제됐습니다.
 
 ## A. 실행 환경
 
@@ -52,14 +43,19 @@ npm run start:provider
 ## B. Azure 배포
 
 ```bash
-az login
+az login --tenant 87c0e760-8b48-4301-a47d-a221b21bdee9
+az account set --subscription aa3a0813-c921-4974-abb8-a0a68afd72a0
 azd config set auth.useAzureCli true
-azd env new <ENV_NAME> --subscription <SUBSCRIPTION_ID> --location eastus2
-azd env set AZURE_PRINCIPAL_ID <DEPLOYER_OBJECT_ID>
+azd env new sredemolive --subscription aa3a0813-c921-4974-abb8-a0a68afd72a0 --location eastus2
+azd env set AZURE_PRINCIPAL_ID e69bc810-23c3-4656-8f38-9d7f098e0c90
 azd env set ENABLE_INCIDENT_SCANNING true
 azd provision --preview
 azd provision
 ```
+
+배포 사용자 ID는 이전 리허설의 로그인 사용자 기준입니다.
+`az ad signed-in-user show --query id --output tsv`로 확인하고 다른 사용자로
+로그인했다면 그 사용자의 실제 ID를 넣습니다.
 
 환경 이름은 소문자·숫자·하이픈 3~16자로 지정합니다. 배포는 업무용 RG와 Agent용 RG,
 2-node AKS Standard, ACR Standard, 두 LAW/App Insights, 실제 SRE Agent를 생성합니다.
@@ -139,7 +135,13 @@ GitHub 인증 전 대체 검증은 `node scripts/source-snapshot.mjs`로 가능�
 
 ## D. 장애·복구
 
+장애 발생·복구와 테스트 요청 생성은 스크립트로 수행합니다. 시연 중 트래픽·실패율·
+지연·경고·조사 결과는 [진행 가이드의 포털 관측](docs/demo-guide.md#포털-관측)을
+따라 포털에서 확인합니다.
+
 ```bash
+unset DEMO_TARGET
+azd env select sredemolive
 node scripts/demo.mjs baseline
 node scripts/demo.mjs incident
 node scripts/demo.mjs recover
